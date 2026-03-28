@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { api } from './services/api';
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -18,7 +17,6 @@ function App() {
   const [tempIudDate, setTempIudDate] = useState('');
   const [iudReplacementDate, setIudReplacementDate] = useState(null);
   const [monthsUntilReplacement, setMonthsUntilReplacement] = useState(null);
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
 
     // List of available symptoms users can track
   const symptomOptions = [
@@ -28,121 +26,43 @@ function App() {
   ];
 
   /**
-   * Load data from server first, fallback to localStorage
+   * Load saved data from browser's localStorage when component first mounts
+   * This restores previously saved period dates and symptoms
    */
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoaded(false);
-      
-      try {
-        // Try to load from server first
-        const serverData = await api.getAllData();
-        
-        if (serverData && (serverData.periodDates?.length > 0 || Object.keys(serverData.symptoms || {}).length > 0)) {
-          // Server has data - use it
-          setPeriodDates(serverData.periodDates || []);
-          setSymptoms(serverData.symptoms || {});
-          if (serverData.iudInsertionDate) {
-            const iudDate = new Date(serverData.iudInsertionDate);
-            setIudInsertionDate(iudDate);
-            calculateIudReplacement(iudDate);
-          }
-          console.log('✅ Data loaded from server');
-        } else {
-          // No server data, use localStorage as fallback
-          const savedPeriods = localStorage.getItem('periodDates');
-          const savedSymptoms = localStorage.getItem('symptoms');
-          const savedIudDate = localStorage.getItem('iudInsertionDate');
-          
-          if (savedPeriods) setPeriodDates(JSON.parse(savedPeriods));
-          if (savedSymptoms) setSymptoms(JSON.parse(savedSymptoms));
-          if (savedIudDate) {
-            const iudDate = new Date(JSON.parse(savedIudDate));
-            setIudInsertionDate(iudDate);
-            calculateIudReplacement(iudDate);
-          }
-          console.log('📱 Data loaded from localStorage (server empty)');
-        }
-      } catch (error) {
-        // Server unavailable, use localStorage
-        console.error('Server unavailable, using localStorage:', error);
-        const savedPeriods = localStorage.getItem('periodDates');
-        const savedSymptoms = localStorage.getItem('symptoms');
-        const savedIudDate = localStorage.getItem('iudInsertionDate');
-        
-        if (savedPeriods) setPeriodDates(JSON.parse(savedPeriods));
-        if (savedSymptoms) setSymptoms(JSON.parse(savedSymptoms));
-        if (savedIudDate) {
-          const iudDate = new Date(JSON.parse(savedIudDate));
-          setIudInsertionDate(iudDate);
-          calculateIudReplacement(iudDate);
-        }
-        console.log('💾 Data loaded from localStorage (server offline)');
-      }
-      
-      setIsLoaded(true);
-    };
-    
-    loadData();
+    const savedPeriods = localStorage.getItem('periodDates');
+    const savedSymptoms = localStorage.getItem('symptoms');
+    const savedIudDate = localStorage.getItem('iudInsertionDate');
+    if (savedPeriods) setPeriodDates(JSON.parse(savedPeriods));
+    if (savedSymptoms) setSymptoms(JSON.parse(savedSymptoms));
+    if (savedIudDate) {
+    const iudDate = new Date(JSON.parse(savedIudDate));
+    setIudInsertionDate(iudDate);
+    calculateIudReplacement(iudDate);
+  }
+    setIsLoaded(true); // save data
   }, []);
 
   /**
-   * Save data to BOTH server AND localStorage
+   * Save data to localStorage whenever periodDates or symptoms change
+   * Also recalculate predictions when period data updates
+   * Uses isLoaded flag to prevent overwriting saved data with empty initial state
    */
   useEffect(() => {
-    if (!isLoaded) return; // Don't save during initial load
-    
-    const saveData = async () => {
-      const dataToSave = {
-        periodDates,
-        symptoms,
-        iudInsertionDate: iudInsertionDate?.toISOString() || null
-      };
-      
-      // Save to localStorage immediately (fast, always works)
-      localStorage.setItem('periodDates', JSON.stringify(periodDates));
-      localStorage.setItem('symptoms', JSON.stringify(symptoms));
-      if (iudInsertionDate) {
-        localStorage.setItem('iudInsertionDate', JSON.stringify(iudInsertionDate));
-      }
-      
-      // Update predictions if we have period data
-      if (periodDates.length > 0) {
-        updatePredictions();
-      } else {
-        setPrediction(null);
-      }
-      
-      // Save to server in background (don't block UI)
-      setSyncStatus('syncing');
-      try {
-        const result = await api.saveAllData(dataToSave);
-        if (result?.success) {
-          setSyncStatus('success');
-          console.log('💾 Data synced to server');
-          // Reset success status after 2 seconds
-          setTimeout(() => setSyncStatus('idle'), 2000);
-        } else {
-          setSyncStatus('error');
-          console.warn('Server save failed, but data saved locally');
-          setTimeout(() => setSyncStatus('idle'), 3000);
-        }
-      } catch (error) {
-        console.error('Failed to save to server:', error);
-        setSyncStatus('error');
-        setTimeout(() => setSyncStatus('idle'), 3000);
-        // Data is still saved in localStorage, will sync next time
-      }
-    };
-    
-    // Debounce saves to avoid too many requests
-    const timeoutId = setTimeout(saveData, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [periodDates, symptoms, iudInsertionDate, isLoaded]);
+    if (!isLoaded) return; // PREVENT overwrite on first load
 
+    localStorage.setItem('periodDates', JSON.stringify(periodDates));
+    localStorage.setItem('symptoms', JSON.stringify(symptoms));
+    if (periodDates.length > 0) {
+      updatePredictions();
+    }
+    if (iudInsertionDate) {
+    localStorage.setItem('iudInsertionDate', JSON.stringify(iudInsertionDate));
+    }
+  }, [periodDates, symptoms, iudInsertionDate]);
 
   /**
-   * ----------------                                 MAIN PREDICTION ALGORITHM             -----------------------
+   * MAIN PREDICTION ALGORITHM
    * Analyzes historical period data to predict future cycles
    * Uses statistical methods including: average, median, mode, weighted average, and trend analysis
    */
