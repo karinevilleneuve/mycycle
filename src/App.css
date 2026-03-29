@@ -1,0 +1,1124 @@
+* {
+  margin: 0;
+  padding: 0;
+/*  box-sizing: border-box; */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+  background: linear-gradient(135deg, #FFF7F8 0%, #FEE5EA 100%);
+  min-height: 100vh;
+}
+
+.App {
+  min-height: 100vh;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  max-width: none; /* Remove max-width restriction */
+  /*max-width: 1200px;*/
+  height: 100%;
+  width: 100%; /* Take full width */
+  margin: 0 auto;
+  background: #;
+  border-radius: 10px;
+ /* box-shadow: 0 20px 60px rgba(0,0,0,0.3); */
+  overflow: hidden;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+
+  color: #333;
+  padding: 30px;
+  text-align: center;
+}
+
+.header h1 {
+  color: #333;
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  opacity: 0.9;
+  font-size: 1em;
+}
+
+.calendar-container {
+  padding: 30px;
+}
+
+.calendar-header {
+  background: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+}
+
+.calendar-header h2 {
+  font-size: 1.5em;
+  color: #333;
+}
+
+/* Dot styles - unified */
+.nav-button {
+  background: white;
+  border: none;
+  font-size: 1.5em;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: red;
+}
+
+.nav-button:hover {
+  background: white;
+  color: red;
+  transform: scale(1.2);
+}
+
+/* Add styles for the Today button */
+.today-button {
+  background: #5a67d8;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.today-button:hover {
+  background: #ff6666;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 68, 68, 0.3);
+}
+
+.today-button:active {
+  transform: translateY(0);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 10px;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  padding: 10px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  font-weight: 500;
+  color: #333;
+  border: 2px solid transparent; /* Add a transparent border by default */
+}
+
+/* Or with a different color and glow effect: */
+.calendar-day.today {
+  border: 2px solid #5a67d8;
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
+  position: relative;
+}
+/* Optional: Add a subtle inner glow for the current day */
+.calendar-day.today::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
+  pointer-events: none;
+}
+.calendar-day.has-period.today,
+.calendar-day.predicted-period.today,
+.calendar-day.ovulation.today,
+.calendar-day.fertile.today,
+.calendar-day.has-symptoms.today {
+  border: 3px solid #5a67d8; /* Keep the border even when other statuses are applied */
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  background: #e9ecef;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  cursor: default;
+  box-shadow: none;
+}
+
+.calendar-day.empty:hover {
+  transform: none;
+  background: transparent;
+}
+
+.day-number {
+  font-size: 1em;
+  margin-bottom: 5px;
+}
+
+/* Dot styles - unified */
+.period-dot, .predicted-dot, .ovulation-dot, .fertile-dot, .symptoms-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.period-dot {
+  background: #ff4444;
+}
+
+.predicted-dot {
+  background: #e91e63;
+  animation: pulse 1.5s infinite;
+}
+
+.ovulation-dot {
+  width: 10px;
+  height: 10px;
+  background: #ff9800;
+  bottom: 7px;
+  animation: glow 1s ease-in-out infinite alternate;
+}
+
+.fertile-dot {
+  background: #4caf50;
+}
+
+.symptoms-dot {
+  background: #2196f3;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(-50%) scale(1.2);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 2px #e91e63;
+  }
+  to {
+    box-shadow: 0 0 8px #e91e63;
+  }
+}
+
+/* Calendar day backgrounds */
+.calendar-day.has-period {
+  background: #F7ABBF;
+  border: 1px solid #e91e63;
+  color: #ff4444;
+}
+
+.calendar-day.predicted-period {
+  background: #ffe0f0;
+  border: 1px solid #e91e63;
+}
+
+.calendar-day.ovulation {
+  background: #fff3e0;
+  border: 1px solid #ebc58d;
+}
+
+.calendar-day.fertile {
+  background: #e8f5e9;
+  border: 1px solid #4caf50;
+}
+
+.calendar-day.has-symptoms {
+  background: #e3f2fd;
+}
+
+.legend {
+  display: flex !important;
+  justify-content: center;
+  gap: 25px;
+  padding: 20px 30px;
+  flex-wrap: wrap;
+  border-top: 2px solid #e0e0e0;
+  background: white;
+  margin-top: 20px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+
+.legend-label-predicted {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+  background: #ffe0f0;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.legend-label-period {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+  background: #F7ABBF;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.legend-label-ovulation {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+  background: #fff3e0;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.legend-label-fertile {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+  background: #e8f5e9;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.legend-label-symptoms {
+  font-size: 0.85em;
+  color: #333;
+  font-weight: 500;
+  background: #e3f2fd;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-content h3 {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 1.3em;
+}
+
+.period-section, .symptoms-section, .notes-section {
+  margin-bottom: 25px;
+}
+
+.period-section h4, .symptoms-section h4, .notes-section h4 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.btn-add, .btn-remove, .btn-save, .btn-cancel {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+}
+
+/* Window for period and symptom tracking */
+.btn-add {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-add:hover {
+  background: #ff4444;
+  transform: translateY(-2px);
+}
+
+.btn-remove {
+  background: #5a67d8;
+  color: white;
+}
+
+.btn-remove:hover {
+  background: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.period-status {
+  color: #4caf50;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.symptoms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.symptom-button {
+  color:#333;
+  padding: 8px 12px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85em;
+}
+
+.symptom-button:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+}
+
+.symptom-button.active {
+  background: #D6E1FF;
+  color: white;
+}
+
+textarea {
+  color:#333;
+  background: white;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9em;
+  resize: vertical;
+}
+
+textarea:focus {
+  color:#333;
+  outline: none;
+  border-color: #667eea;
+  background: white;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-save {
+  background: #B3E6B0;
+  color: #777;
+}
+
+.btn-save:hover {
+  background: #B3E6B0;
+  transform: translateY(-2px);
+}
+
+.btn-cancel {
+  background: #999;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: #777;
+  transform: translateY(-2px);
+}
+
+/* Prediction Banner */
+.prediction-banner {
+  /*background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);*/
+  background: #FEE5EA;
+  margin: 20px 30px;
+  padding: 20px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: slideDown 0.5s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.prediction-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Buttom with confidence level */
+.prediction-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.prediction-main {
+  text-align: left;
+  display: flex;
+}
+
+.prediction-title {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.prediction-date {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.prediction-days {
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+.prediction-confidence {
+  background: rgba(255,255,255,0.2);
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+}
+
+/* Prediction Modal */
+.prediction-modal {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.prediction-details {
+  margin-top: 20px;
+}
+
+.prediction-section {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.prediction-section h4 {
+  color: #667eea;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+}
+
+.prediction-item {
+  padding: 10px;
+  background: #f8f9fa;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.confidence-badge {
+  padding: 3px 10px;
+  border-radius: 15px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.confidence-badge.very-high {
+  background: #4caf50;
+  color: white;
+}
+
+.confidence-badge.high {
+  background: #8bc34a;
+  color: white;
+}
+
+.confidence-badge.moderate {
+  background: #ffc107;
+  color: #333;
+}
+
+.confidence-badge.low {
+  background: #ff9800;
+  color: white;
+}
+
+.confidence-badge.very-low {
+  background: #f44336;
+  color: white;
+}
+
+.fertility-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  line-height: 1.8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.stat-label {
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.symptoms-prediction {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.symptom-probability {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.symptom-probability span:first-child {
+  width: 100px;
+  font-size: 0.9em;
+}
+
+.probability-bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.probability-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.probability-value {
+  min-width: 45px;
+  font-size: 0.85em;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.confidence-interval {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.confidence-note {
+  font-size: 0.8em;
+  color: #999;
+  margin-top: 8px;
+}
+
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 15px;
+  }
+  
+  .calendar-grid {
+    gap: 5px;
+  }
+  
+  .calendar-weekdays {
+    gap: 5px;
+  }
+  
+  .symptoms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+  
+  .button-group {
+    flex-direction: column;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+  
+  .prediction-banner {
+    margin: 15px;
+    padding: 15px;
+  }
+  
+  .prediction-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .prediction-main {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .prediction-item {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .symptom-probability {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .symptom-probability span:first-child {
+    width: auto;
+  }
+  
+  .import-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .import-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 2.5em;
+  }
+  
+  .import-section {
+    padding: 15px;
+  }
+  
+  .legend {
+    gap: 15px;
+    padding: 15px;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a67d8;
+}
+
+
+/* IUD Section Styles */
+.iud-section {
+  background: linear-gradient(135deg, #f5f0ff 0%, #e8e0ff 100%);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid #d4c4ff;
+}
+
+.iud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.iud-header h4 {
+  margin: 0;
+  color: #5e35b1;
+  font-size: 1.1em;
+}
+
+.btn-add-iud, .btn-edit-iud {
+  background: #5e35b1;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.3s ease;
+}
+
+.btn-add-iud:hover, .btn-edit-iud:hover {
+  background: #7c4dff;
+  transform: translateY(-1px);
+}
+
+.iud-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.iud-date, .iud-replacement, .iud-countdown {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e0d6ff;
+}
+
+.iud-date strong, .iud-replacement strong, .iud-countdown strong {
+  color: #5e35b1;
+}
+
+.iud-status {
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.iud-status.ok {
+  color: #4caf50;
+  background: #e8f5e9;
+}
+
+.iud-status.warning {
+  color: #ff9800;
+  background: #fff3e0;
+}
+
+.iud-status.urgent {
+  color: #ff5722;
+  background: #ffede7;
+}
+
+.iud-status.expired {
+  color: #ff4444;
+  background: #ffe0e0;
+}
+
+/* Progress bar for IUD */
+.iud-progress {
+  margin-top: 15px;
+}
+
+.iud-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.iud-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.iud-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75em;
+  color: #666;
+}
+
+/* IUD Empty State */
+.iud-empty {
+  text-align: center;
+  padding: 15px;
+  background: #fafaff;
+  border-radius: 10px;
+}
+
+.iud-empty p {
+  color: #666;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+
+.btn-add-iud-primary {
+  background: #5e35b1;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-add-iud-primary:hover {
+  background: #7c4dff;
+  transform: translateY(-2px);
+}
+
+/* IUD Modal */
+.iud-info-text {
+  background: #f5f0ff;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.iud-info-text p {
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: #5e35b1;
+}
+
+.iud-date-input {
+  margin-bottom: 20px;
+}
+
+.iud-date-input label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #5e35b1;
+}
+
+.iud-date-input input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1em;
+}
+
+.iud-current-date {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.btn-remove-iud {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.btn-remove-iud:hover {
+  background: #ff6666;
+  transform: translateY(-1px);
+}
+
+/*              Phase section            */
+
+.cycle-phase-card {
+  margin: 20px 30px;
+  text-align: left;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  animation: slideDown 0.5s ease;
+}
+
+.phase-header {
+  display: flex;
+  align-items: left;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.phase-icon {
+  order: 3;
+  font-size: 3em;
+  align-items: right;
+}
+
+.phase-info {
+  flex: 1;
+}
+
+.phase-name {
+  margin: 0 0 5px 0;
+  font-size: 1.3em;
+}
+
+.phase-description {
+  margin: 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+
+.phase-tips {
+  text-align: left;
+  margin-top: 15px;
+}
+
+.phase-tips strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+}
+
+.phase-tips ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.phase-tips li {
+  margin: 5px 0;
+  font-size: 0.85em;
+  color: #555;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .cycle-phase-card {
+    margin: 10px 15px;
+    padding: 15px;
+  }
+  
+  .phase-icon {
+    font-size: 2em;
+  }
+  
+  .phase-name {
+    font-size: 1.1em;
+  }
+  
+  .phase-header {
+    gap: 10px;
+  }
+}
