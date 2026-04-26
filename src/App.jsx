@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { api } from './services/api';
+import LoginScreen from './components/LoginScreen';
+import { auth } from './services/api';
+
 
 function App() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -19,6 +22,7 @@ function App() {
   const [iudReplacementDate, setIudReplacementDate] = useState(null);
   const [monthsUntilReplacement, setMonthsUntilReplacement] = useState(null);
   const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [currentUser, setCurrentUser] = useState(auth.getUsername());
 
     // List of available symptoms users can track
   const symptomOptions = [
@@ -32,111 +36,96 @@ function App() {
    */
   useEffect(() => {
     const loadData = async () => {
-      setIsLoaded(false);
-      
-      try {
-        // Try to load from server first
-        const serverData = await api.getAllData();
-        
-        if (serverData && (serverData.periodDates?.length > 0 || Object.keys(serverData.symptoms || {}).length > 0)) {
-          // Server has data - use it
-          setPeriodDates(serverData.periodDates || []);
-          setSymptoms(serverData.symptoms || {});
-          if (serverData.iudInsertionDate) {
-            const iudDate = new Date(serverData.iudInsertionDate);
-            setIudInsertionDate(iudDate);
-            calculateIudReplacement(iudDate);
-          }
-          console.log('✅ Data loaded from server');
-        } else {
-          // No server data, use localStorage as fallback
-          const savedPeriods = localStorage.getItem('periodDates');
-          const savedSymptoms = localStorage.getItem('symptoms');
-          const savedIudDate = localStorage.getItem('iudInsertionDate');
-          
-          if (savedPeriods) setPeriodDates(JSON.parse(savedPeriods));
-          if (savedSymptoms) setSymptoms(JSON.parse(savedSymptoms));
-          if (savedIudDate) {
-            const iudDate = new Date(JSON.parse(savedIudDate));
-            setIudInsertionDate(iudDate);
-            calculateIudReplacement(iudDate);
-          }
-          console.log('📱 Data loaded from localStorage (server empty)');
-        }
-      } catch (error) {
-        // Server unavailable, use localStorage
-        console.error('Server unavailable, using localStorage:', error);
-        const savedPeriods = localStorage.getItem('periodDates');
-        const savedSymptoms = localStorage.getItem('symptoms');
-        const savedIudDate = localStorage.getItem('iudInsertionDate');
-        
-        if (savedPeriods) setPeriodDates(JSON.parse(savedPeriods));
-        if (savedSymptoms) setSymptoms(JSON.parse(savedSymptoms));
-        if (savedIudDate) {
-          const iudDate = new Date(JSON.parse(savedIudDate));
+      // If not logged in, don't try to load data
+      if (!auth.isLoggedIn()) {
+        setIsLoaded(true);
+        return;
+      }
+
+      const applyData = (data) => {
+        const normalisedPeriods = (data.periodDates || []).map((d) => {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+          return toDateKey(new Date(d));
+        });
+        setPeriodDates(normalisedPeriods);
+        setSymptoms(data.symptoms || {});
+        if (data.iudInsertionDate) {
+          const iudDate = new Date(data.iudInsertionDate);
           setIudInsertionDate(iudDate);
           calculateIudReplacement(iudDate);
         }
-        console.log('💾 Data loaded from localStorage (server offline)');
-      }
-      
+      };
+
+      // Load from localStorage immediately (keyed per user)
+      const userKey    = auth.getUsername();
+      const savedPeriods  = localStorage.getItem(`${userKey}_periodDates`);
+      const savedSymptoms = localStorage.getItem(`${userKey}_symptoms`);
+      const savedIud      = localStorage.getItem(`${userKey}_iudInsertionDate`);
+      const localTs       = Number(localStorage.getItem(`${userKey}_lastModified`) || 0);
+
+      applyData({
+        periodDates:      savedPeriods  ? JSON.parse(savedPeriods)  : [],
+        symptoms:         savedSymptoms ? JSON.parse(savedSymptoms) : {},
+        iudInsertionDate: savedIud      ? JSON.parse(savedIud)      : null,
+      });
+
       setIsLoaded(true);
+
+      // Sync from server in background
+      try {
+        const serverData = await api.getAllData();
+        const serverTs   = serverData?.lastModified ? Number(serverData.lastModified) : 0;
+        if (serverTs > localTs) {
+          applyData(serverData);
+          console.log('Updated from server');
+        }
+      } catch {
+        console.warn('Server unavailable, using local data');
+      }
     };
-    
+
     loadData();
-  }, []);
+  }, [calculateIudReplacement, currentUser]); // re-runs when user changes
 
   /**
    * Save data to BOTH server AND localStorage
    */
   useEffect(() => {
-    if (!isLoaded) return; // Don't save during initial load
-    
-    const saveData = async () => {
+    if (!isLoaded || !auth.isLoggedIn()) return;
+
+    const timeoutId = setTimeout(async () => {
+      const now     = Date.now();
+      const userKey = auth.getUsername();
+
       const dataToSave = {
         periodDates,
         symptoms,
-        iudInsertionDate: iudInsertionDate?.toISOString() || null
+        iudInsertionDate: iudInsertionDate?.toISOString() ?? null,
+        lastModified: now,
       };
-      
-      // Save to localStorage immediately (fast, always works)
-      localStorage.setItem('periodDates', JSON.stringify(periodDates));
-      localStorage.setItem('symptoms', JSON.stringify(symptoms));
-      if (iudInsertionDate) {
-        localStorage.setItem('iudInsertionDate', JSON.stringify(iudInsertionDate));
-      }
-      
-      // Update predictions if we have period data
-      if (periodDates.length > 0) {
-        updatePredictions();
-      } else {
-        setPrediction(null);
-      }
-      
-      // Save to server in background (don't block UI)
+
+      // Save to localStorage with per-user keys
+      localStorage.setItem(`${userKey}_periodDates`,      JSON.stringify(periodDates));
+      localStorage.setItem(`${userKey}_symptoms`,         JSON.stringify(symptoms));
+      localStorage.setItem(`${userKey}_iudInsertionDate`, JSON.stringify(iudInsertionDate?.toISOString() ?? null));
+      localStorage.setItem(`${userKey}_lastModified`,     String(now));
+
       setSyncStatus('syncing');
       try {
         const result = await api.saveAllData(dataToSave);
         if (result?.success) {
           setSyncStatus('success');
-          console.log('💾 Data synced to server');
-          // Reset success status after 2 seconds
           setTimeout(() => setSyncStatus('idle'), 2000);
         } else {
           setSyncStatus('error');
-          console.warn('Server save failed, but data saved locally');
           setTimeout(() => setSyncStatus('idle'), 3000);
         }
-      } catch (error) {
-        console.error('Failed to save to server:', error);
+      } catch {
         setSyncStatus('error');
         setTimeout(() => setSyncStatus('idle'), 3000);
-        // Data is still saved in localStorage, will sync next time
       }
-    };
-    
-    // Debounce saves to avoid too many requests
-    const timeoutId = setTimeout(saveData, 1000);
+    }, 1000);
+
     return () => clearTimeout(timeoutId);
   }, [periodDates, symptoms, iudInsertionDate, isLoaded]);
 
@@ -525,6 +514,28 @@ function App() {
   };
 
     /**
+   * Log-in Log-out
+   */
+
+  const handleLogin = (username) => {
+    setCurrentUser(username);
+    // Reset all data state so previous user's data doesn't flash
+    setPeriodDates([]);
+    setSymptoms({});
+    setIudInsertionDate(null);
+    setIsLoaded(false);
+  };
+
+  const handleLogout = async () => {
+    await api.logout();
+    setCurrentUser(null);
+    setPeriodDates([]);
+    setSymptoms({});
+    setIudInsertionDate(null);
+    setIsLoaded(false);
+  };
+
+    /**
    * Handle clicking on a calendar day - opens modal to add/edit symptoms
    */
 
@@ -705,11 +716,19 @@ function App() {
  // JSX RENDERING SECTION
 
   return (
+  // Show login screen if not logged in
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
     <div className="App">
       <div className="container">
         <header className="header">
           <h1>Period Tracker</h1>
           <p className="subtitle">Smart cycle tracking and prediction</p>
+            <div className="user-menu">
+          <p className="user-greeting">Welcome, <strong>{currentUser}</strong></p>
+          <button onClick={handleLogout} className="btn-logout">Sign out</button>
+            </div>
         </header>
         
         {prediction && (

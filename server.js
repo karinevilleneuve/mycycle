@@ -4,6 +4,7 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import 'dotenv/config';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -91,30 +92,31 @@ function initUserDataFile(username) {
 }
 
 // ─── Create initial users if none exist ───────────────────────────────────────
-// IMPORTANT: Edit the usernames and passwords below before first run.
-// After first run, users are stored in users.json — changes here won't apply.
 function initializeDefaultUsers() {
   const users = loadUsers();
-  if (Object.keys(users).length === 0) {
-    console.log('No users found — creating default users from config...');
+  if (Object.keys(users).length > 0) return; // already set up
 
-    const defaultUsers = [
-      { username: 'karine',   password: 'changeme1' },
-      { username: 'user2',    password: 'changeme2' },
-    ];
-
-    defaultUsers.forEach(({ username, password }) => {
-      const { hash, salt } = hashPassword(password);
-      users[username] = { hash, salt };
-      initUserDataFile(username);
-      console.log(`Created user: ${username}`);
-    });
-
-    saveUsers(users);
-    console.log('✅ Default users created. Please change passwords via the /api/change-password endpoint.');
+  const initUsers = process.env.INIT_USERS;
+  if (!initUsers) {
+    console.log('No INIT_USERS in .env and no users.json found.');
+    console.log('Set INIT_USERS=username1:password1,username2:password2 in .env');
+    return;
   }
-}
 
+  console.log('No users found — creating users from INIT_USERS env variable...');
+
+  initUsers.split(',').forEach(entry => {
+    const [username, password] = entry.trim().split(':');
+    if (!username || !password) return;
+    const { hash, salt } = hashPassword(password);
+    users[username] = { hash, salt };
+    initUserDataFile(username);
+    console.log(`Created user: ${username}`);
+  });
+
+  saveUsers(users);
+  console.log('Users created. You can now remove INIT_USERS from .env if you wish.');
+}
 initializeDefaultUsers();
 
 // ─── Auth middleware ───────────────────────────────────────────────────────────
@@ -175,7 +177,7 @@ app.post('/api/login', (req, res) => {
   // Make sure their data file exists
   initUserDataFile(username);
 
-  console.log(`✅ User logged in: ${username}`);
+  console.log(`User logged in: ${username}`);
   res.json({ success: true, token, username });
 });
 
@@ -185,7 +187,7 @@ app.post('/api/logout', requireAuth, (req, res) => {
   const tokens = loadTokens();
   delete tokens[token];
   saveTokens(tokens);
-  console.log(`👋 User logged out: ${req.username}`);
+  console.log(`User logged out: ${req.username}`);
   res.json({ success: true });
 });
 
@@ -212,7 +214,7 @@ app.post('/api/change-password', requireAuth, (req, res) => {
   users[req.username] = { hash, salt };
   saveUsers(users);
 
-  console.log(`🔑 Password changed for user: ${req.username}`);
+  console.log(`Password changed for user: ${req.username}`);
   res.json({ success: true, message: 'Password changed successfully' });
 });
 
@@ -326,7 +328,7 @@ app.get('/api/export/csv', requireAuth, (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📁 User data directory: ${DATA_DIR}`);
-  console.log(`👥 Users file: ${USERS_FILE}`);
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`User data directory: ${DATA_DIR}`);
+  console.log(`Users file: ${USERS_FILE}`);
 });

@@ -1034,3 +1034,219 @@ textarea:focus {
   background: #ff6666;
   transform: translateY(-1px);
 }
+
+/* ─── Add these styles to the bottom of your App.css ─────────────────────── */
+
+/* Login overlay — covers the full screen */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 40%, #fce4ec 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Login card */
+.login-card {
+  background: white;
+  border-radius: 24px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(233, 30, 99, 0.15);
+  margin: 16px;
+}
+
+/* Header */
+.login-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.login-moon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08); }
+}
+
+.login-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e91e63;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.login-subtitle {
+  color: #999;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Form */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.login-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #f0f0f0;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #333;
+  background: #fafafa;
+  transition: border-color 0.2s, background 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.login-input:focus {
+  border-color: #e91e63;
+  background: white;
+}
+
+.login-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-show-password {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.login-show-password:hover {
+  opacity: 1;
+}
+
+/* Error message */
+.login-error {
+  background: #fce4ec;
+  border: 1px solid #f48fb1;
+  color: #c62828;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Submit button */
+.login-button {
+  background: #e91e63;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.login-button:hover:not(:disabled) {
+  background: #c2185b;
+  transform: translateY(-1px);
+}
+
+.login-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Footer note */
+.login-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #bbb;
+  margin: 24px 0 0 0;
+}
+
+/* ─── User menu in the app header ─────────────────────────────────────────── */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.user-greeting {
+  font-size: 14px;
+  color: #888;
+}
+
+.user-greeting strong {
+  color: #e91e63;
+}
+
+.btn-logout {
+  background: none;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #999;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-logout:hover {
+  border-color: #e91e63;
+  color: #e91e63;
+}
+
+/* Sync status */
+.sync-status {
+  font-size: 12px;
+  color: #aaa;
+  margin: 4px 0 0 0;
+}
